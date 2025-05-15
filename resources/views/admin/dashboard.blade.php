@@ -296,7 +296,6 @@
                                                         <th>Name</th>
                                                         <th>Email</th>
                                                         <th>Role</th>
-                                                        <th>Department</th>
                                                         <th>Joined</th>
                                                     </tr>
                                                 </thead>
@@ -306,7 +305,6 @@
                                                         <td>{{ $user->name }}</td>
                                                         <td>{{ $user->email }}</td>
                                                         <td>{{ ucfirst($user->role) }}</td>
-                                                        <td>{{ $user->department->name ?? 'N/A' }}</td>
                                                         <td>{{ $user->created_at->format('m/d/Y') }}</td>
                                                     </tr>
                                                     @endforeach

@@ -10,12 +10,13 @@ use App\Models\Category;
 use App\Models\Inventory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
     public function index()
     {
-        $products = Product::with(['category', 'inventory'])->paginate(10);
+        $products = Product::with(['category', 'inventory'])->get();
         return view('inventory.products.index', compact('products'));
     }
     
@@ -82,27 +83,35 @@ class ProductController extends Controller
             'is_featured' => ['nullable', 'boolean'],
             'low_stock_threshold' => ['required', 'integer', 'min:0']
         ]);
-        
+
         $product->fill($request->except(['image', 'low_stock_threshold']));
         $product->is_featured = $request->has('is_featured');
-        
+
         if ($request->hasFile('image')) {
             // Delete old image if exists
             if ($product->image) {
                 Storage::disk('public')->delete($product->image);
             }
-            
+
             $path = $request->file('image')->store('products', 'public');
             $product->image = $path;
         }
-        
+
         $product->save();
-        
-        // Update inventory threshold
-        $product->inventory->update([
-            'low_stock_threshold' => $request->low_stock_threshold
-        ]);
-        
+
+        // Ensure inventory record exists
+        if (!$product->inventory) {
+            $product->inventory()->create([
+                'quantity' => 0, // Default quantity if not provided
+                'low_stock_threshold' => $request->low_stock_threshold
+            ]);
+        } else {
+            // Update inventory threshold
+            $product->inventory->update([
+                'low_stock_threshold' => $request->low_stock_threshold
+            ]);
+        }
+
         return redirect()->route('inventory.products.index')->with('success', 'Product updated successfully');
     }
     

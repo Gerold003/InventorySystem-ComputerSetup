@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Models\{Order, Product, Category};
+use App\Http\Controllers\Inventory\ProductController;
 
 // Route model binding
 Route::model('order', Order::class);
@@ -47,7 +48,8 @@ Route::middleware(['auth'])->group(function () {
     // Inventory Routes
     Route::prefix('inventory')->middleware('auth.session')->name('inventory.')->group(function () {
         Route::get('/dashboard', [App\Http\Controllers\Inventory\InventoryController::class, 'dashboard'])->name('dashboard');
-        Route::resource('products', App\Http\Controllers\Inventory\ProductController::class);
+        Route::resource('products', ProductController::class);
+        Route::resource('inventory/products', ProductController::class);
         Route::resource('suppliers', App\Http\Controllers\Inventory\SupplierController::class);
         Route::resource('purchase-orders', App\Http\Controllers\Inventory\PurchaseOrderController::class);
         Route::post('purchase-orders/{purchaseOrder}/approve', [App\Http\Controllers\Inventory\PurchaseOrderController::class, 'approve'])
@@ -67,3 +69,4 @@ Route::middleware(['auth'])->group(function () {
         Route::post('orders/{order}/refund', [App\Http\Controllers\Sales\OrderController::class, 'refund'])->name('orders.refund');
     });
 });
+

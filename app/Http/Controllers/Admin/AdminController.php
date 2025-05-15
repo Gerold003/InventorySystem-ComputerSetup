@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\PurchaseOrder;
+use App\Models\Department;
 
 class AdminController extends Controller
 {
@@ -18,7 +19,7 @@ class AdminController extends Controller
         $totalProducts = Product::count();
         $totalOrders = Order::count();
         $totalPurchaseOrders = PurchaseOrder::count();
-        
+        $totalDepartments = Department::count();
         
         $recentUsers = User::latest()->take(5)->get();
         $recentOrders = Order::with('user')->latest()->take(5)->get();

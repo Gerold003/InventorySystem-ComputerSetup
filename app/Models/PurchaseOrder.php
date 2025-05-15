@@ -1,6 +1,5 @@
 <?php
 // app/Models/PurchaseOrder.php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,13 +10,19 @@ class PurchaseOrder extends Model
     use HasFactory;
 
     protected $fillable = [
-        'supplier_id',
-        'user_id',
         'po_number',
+        'supplier_id',
         'order_date',
         'expected_delivery_date',
+        'notes',
         'status',
-        'notes'
+        'user_id',
+    ];
+
+    // Add this date casting
+    protected $casts = [
+        'order_date' => 'datetime',
+        'expected_delivery_date' => 'datetime',
     ];
 
     public function supplier()
@@ -28,10 +33,5 @@ class PurchaseOrder extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
-    }
-
-    public function items()
-    {
-        return $this->hasMany(PurchaseOrderItem::class);
     }
 }
