@@ -182,8 +182,12 @@
                     @if($product->discount > 0)
                         <div class="discount-badge">-{{ $product->discount }}%</div>
                     @endif
-                    <img src="{{ $product->image ? asset('storage/'.$product->image) : asset('images/placeholder.png') }}" 
-                         class="card-img-top product-img" alt="{{ $product->name }}">
+                    <div class="product-img-wrapper">
+                        <img src="{{ $product->image_url }}" 
+                             class="card-img-top product-img" 
+                             alt="{{ $product->name }}"
+                             loading="lazy">
+                    </div>
                     <div class="card-body">
                         <h5 class="card-title">{{ Str::limit($product->name, 40) }}</h5>
                         <div class="d-flex justify-content-between align-items-center">
@@ -195,17 +199,47 @@
                             @else
                                 <span class="fw-bold">${{ number_format($product->price, 2) }}</span>
                             @endif
-                            <span class="badge bg-success">In Stock</span>
+                            <span class="badge bg-{{ $product->inventory && $product->inventory->quantity > 0 ? 'success' : 'danger' }}">
+                                {{ $product->inventory && $product->inventory->quantity > 0 ? 'In Stock' : 'Out of Stock' }}
+                            </span>
                         </div>
                     </div>
-                    <div class="card-footer bg-white border-top-0">
-                        <a href="{{ route('products.show', $product) }}" class="btn btn-primary w-100">View Details</a>
+                    <div class="card-footer bg-white border-top-0 p-3">
+                        <a href="{{ route('products.show', $product) }}" class="btn btn-primary w-100">
+                            <i class="fas fa-eye me-1"></i> View Details
+                        </a>
                     </div>
                 </div>
             </div>
         @endforeach
     </div>
 </div>
+
+<style>
+    .product-img-wrapper {
+        height: 200px;
+        background: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+    
+    .product-img {
+        max-height: 100%;
+        width: auto;
+        object-fit: contain;
+    }
+    
+    .product-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+</style>
 
 <!-- Call to Action -->
 <section class="bg-light py-5 mb-5">

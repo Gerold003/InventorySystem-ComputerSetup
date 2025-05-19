@@ -23,7 +23,9 @@
         </div>
     </main>
 
-    @include('website.layouts.footer')
+    @if (!Request::is('cart') && !Request::is('checkout') && !Request::is('products*'))
+        @include('website.layouts.footer')
+    @endif
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

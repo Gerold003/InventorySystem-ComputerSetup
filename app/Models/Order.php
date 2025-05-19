@@ -24,6 +24,15 @@ class Order extends Model
         'notes'
     ];
 
+    protected $casts = [
+        'subtotal' => 'decimal:2',
+        'tax' => 'decimal:2',
+        'shipping' => 'decimal:2',
+        'total' => 'decimal:2'
+    ];
+
+    protected $with = ['items', 'sale']; // Always load these relationships
+
     public function user()
     {
         return $this->belongsTo(User::class); // customer

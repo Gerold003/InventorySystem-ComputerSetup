@@ -12,7 +12,11 @@ class DepartmentController extends Controller
 {
     public function index()
     {
-        $departments = Department::withCount('users')->paginate(10);
+        $departments = Department::with(['head', 'users'])
+            ->withCount('users')
+            ->orderBy('name')
+            ->get();
+
         return view('admin.departments.index', compact('departments'));
     }
     
@@ -23,20 +27,21 @@ class DepartmentController extends Controller
     
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:departments'],
-            'description' => ['nullable', 'string']
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:departments',
+            'description' => 'nullable|string',
+            'head_id' => 'nullable|exists:users,id'
         ]);
         
-        Department::create($request->only(['name', 'description']));
+        Department::create($validated);
         
         return redirect()->route('admin.departments.index')->with('success', 'Department created successfully');
     }
     
     public function show(Department $department)
     {
-        $users = $department->users()->paginate(10);
-        return view('admin.departments.show', compact('department', 'users'));
+        $department->load(['head', 'users']);
+        return view('admin.departments.show', compact('department'));
     }
     
     public function edit(Department $department)
@@ -46,12 +51,13 @@ class DepartmentController extends Controller
     
     public function update(Request $request, Department $department)
     {
-        $request->validate([
-            'name' => ['required', 'string', 'max:255', Rule::unique('departments')->ignore($department->id)],
-            'description' => ['nullable', 'string']
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:departments,name,' . $department->id,
+            'description' => 'nullable|string',
+            'head_id' => 'nullable|exists:users,id'
         ]);
         
-        $department->update($request->only(['name', 'description']));
+        $department->update($validated);
         
         return redirect()->route('admin.departments.index')->with('success', 'Department updated successfully');
     }

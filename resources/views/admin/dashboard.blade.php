@@ -200,40 +200,62 @@
             <img src="/images/logo.png" alt="TrackNET Logo">
             <span class="sidebar-logo-text">TrackNET</span>
         </div>
-        <button class="sidebar-toggle">
-            <i class="bi bi-caret-left-fill"></i>
-        </button>
     </div>
+    <button class="sidebar-toggle">
+        <i class="fas fa-chevron-left"></i>
+    </button>
 
-    <a href="{{ route('admin.dashboard') }}" class="active">
-        <i class="bi bi-graph-up"></i>
-        <span class="nav-text">Dashboard</span>
+    <!-- Admin Navigation Links -->
+    <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+        <i class="fas fa-tachometer-alt"></i>
+        <span>Dashboard</span>
     </a>
 
-    <a href="#">
-        <i class="bi bi-box-seam"></i>
-        <span class="nav-text">Item Management</span>
+    <a href="{{ route('admin.departments.index') }}" class="{{ request()->routeIs('admin.departments.*') ? 'active' : '' }}">
+        <i class="fas fa-building"></i>
+        <span>Departments</span>
     </a>
 
-    <a href="#">
-        <i class="bi bi-people"></i>
-        <span class="nav-text">Suppliers</span>
+    <a href="{{ route('admin.users.index') }}" class="{{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+        <i class="fas fa-users"></i>
+        <span>Users</span>
     </a>
 
-    <a href="#">
-        <i class="bi bi-map"></i>
-        <span class="nav-text">Orders</span>
+    <a href="{{ route('admin.inventory.index') }}" class="{{ request()->routeIs('admin.inventory.*') ? 'active' : '' }}">
+        <i class="fas fa-boxes"></i>
+        <span>Inventory</span>
     </a>
 
-    <a href="#">
-        <i class="bi bi-info-lg"></i>
-        <span class="nav-text">Reports</span>
+    <a href="{{ route('admin.purchase-orders.index') }}" class="{{ request()->routeIs('admin.purchase-orders.*') ? 'active' : '' }}">
+        <i class="fas fa-shopping-cart"></i>
+        <span>Purchase Orders</span>
     </a>
 
-    
-      
-    
+    <a href="{{ route('admin.department-items.index') }}" class="{{ request()->routeIs('admin.department-items.*') ? 'active' : '' }}">
+        <i class="fas fa-exchange-alt"></i>
+        <span>Assign Items</span>
+    </a>
 
+    <a href="{{ route('admin.reports.index') }}" class="{{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
+        <i class="fas fa-chart-bar"></i>
+        <span>Reports</span>
+    </a>
+
+    <a href="{{ route('admin.stock.alerts') }}" class="{{ request()->routeIs('admin.stock.alerts') ? 'active' : '' }}">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span>Stock Alerts</span>
+    </a>
+
+    <a href="{{ route('logout') }}" class="logout-btn mt-auto" 
+       onclick="event.preventDefault(); 
+                document.getElementById('logout-form').submit();"
+       data-no-redirect="true">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Logout</span>
+    </a>
+    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+        @csrf
+    </form>
 </div>
 
 <!-- Main Content -->

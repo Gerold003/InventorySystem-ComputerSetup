@@ -11,6 +11,7 @@ use App\Models\Alert;
 
 class InventoryController extends Controller
 {
+    
     public function dashboard()
     {
         $totalProducts = Product::count();

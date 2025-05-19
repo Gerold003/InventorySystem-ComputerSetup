@@ -12,10 +12,10 @@ class InventoryMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
-        if (Auth::check() && Auth::user()->isInventory()) {
+        if (Auth::check() && (Auth::user()->isAdmin() || Auth::user()->isInventory())) {
             return $next($request);
         }
 
-        return redirect('/')->with('error', 'You do not have inventory department access');
+        return redirect('/')->with('error', 'You do not have inventory access');
     }
 }

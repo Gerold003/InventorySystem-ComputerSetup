@@ -41,15 +41,15 @@
                                 <tr>
                                     <th>Current Stock:</th>
                                     <td>
-                                        {{ $product->inventory->quantity ?? 0 }}
-                                        @if($product->inventory && $product->inventory->quantity <= $product->inventory->low_stock_threshold)
+                                        {{ $product->inventory_quantity }}
+                                        @if($product->inventory_quantity <= $product->low_stock_threshold)
                                             <span class="badge badge-warning ml-2">Low Stock</span>
                                         @endif
                                     </td>
                                 </tr>
                                 <tr>
                                     <th>Low Stock Threshold:</th>
-                                    <td>{{ $product->inventory->low_stock_threshold ?? 'N/A' }}</td>
+                                    <td>{{ $product->low_stock_threshold }}</td>
                                 </tr>
                                 <tr>
                                     <th>Featured:</th>

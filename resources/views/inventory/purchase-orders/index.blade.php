@@ -1,13 +1,33 @@
 @extends('layouts.app')
 
 @section('content')
+
+
+
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0"><i class="fas fa-file-invoice me-2"></i>Purchase Orders</h2>
+
+
+        <div class="d-flex align-items-center gap-2">       
+    <a href="{{ route('inventory.dashboard') }}" 
+       class="btn btn-primary btn-icon-split shadow-sm"
+       data-toggle="tooltip" 
+       data-placement="bottom" 
+       title="Return to Dashboard">
+        <span class="icon text-white bg-gradient-primary">
+            <i class="fas fa-tachometer-alt"></i>
+        </span>
+        <span class="d-none d-md-inline-block text-white font-weight-medium">
+            Dashboard
+        </span>
+    </a>
         <a href="{{ route('inventory.purchase-orders.create') }}" class="btn btn-primary">
             <i class="fas fa-plus-circle me-2"></i>Create New
-        </a>
-    </div>
+        </span>
+    </a>
+</div>
+</div>
 
     <div class="card shadow-sm">
         <div class="card-body p-0">

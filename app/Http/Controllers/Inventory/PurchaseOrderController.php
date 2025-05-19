@@ -3,7 +3,7 @@
 // app/Http/Controllers/Inventory/PurchaseOrderController.php
 
 namespace App\Http\Controllers\Inventory;
-
+use Carbon\Carbon;
 use App\Http\Controllers\Controller;
 use App\Models\PurchaseOrder;
 use App\Models\Supplier;
@@ -28,7 +28,7 @@ class PurchaseOrderController extends Controller
     
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'supplier_id' => ['required', 'exists:suppliers,id'],
             'order_date' => ['required', 'date'],
             'expected_delivery_date' => ['required', 'date', 'after_or_equal:order_date'],
@@ -65,7 +65,7 @@ class PurchaseOrderController extends Controller
         }
         
         $suppliers = Supplier::all();
-        $products = Product::with('inventory')->get();
+        $products = Product::with(['category', 'stockMovements', 'supplier'])->get();
         $purchaseOrder->load('items');
         
         return view('inventory.purchase-orders.edit', compact('purchaseOrder', 'suppliers', 'products'));
@@ -116,24 +116,33 @@ class PurchaseOrderController extends Controller
     
     public function approve(PurchaseOrder $purchaseOrder)
     {
-        if ($purchaseOrder->status != 'pending') {
-            return back()->with('error', 'Only pending purchase orders can be approved');
+        if (auth()->user()->role !== 'admin') {
+            abort(403);
         }
-        
-        $purchaseOrder->update(['status' => 'approved']);
-        return back()->with('success', 'Purchase order approved');
+
+        $purchaseOrder->update([
+            'status' => 'approved',
+            'approved_by' => auth()->id(),
+            'approved_at' => now()
+        ]);
+
+        return redirect()->back()
+            ->with('success', 'Purchase order approved successfully');
     }
-    
     public function receive(PurchaseOrder $purchaseOrder)
     {
         if ($purchaseOrder->status != 'approved') {
             return back()->with('error', 'Only approved purchase orders can be marked as received');
         }
         
-        // Update inventory for each item
+        // Update stock for each item using stockMovements
         foreach ($purchaseOrder->items as $item) {
-            $inventory = Inventory::firstOrCreate(['product_id' => $item->product_id]);
-            $inventory->increment('quantity', $item->quantity);
+            $item->product->recordStockMovement(
+                $item->quantity,
+                'in',
+                'Purchase Order Received',
+                $purchaseOrder
+            );
         }
         
         $purchaseOrder->update(['status' => 'delivered']);

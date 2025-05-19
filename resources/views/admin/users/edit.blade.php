@@ -5,7 +5,14 @@
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card">
-                <div class="card-header">Edit User: {{ $user->name }}</div>
+                <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>Edit User: {{ $user->name }}
+                    </h5>
+                    <a href="{{ route('admin.dashboard') }}" class="btn btn-sm btn-light">
+                        <i class="fas fa-times"></i> Close
+                    </a>
+                </div>
 
                 <div class="card-body">
                     <form method="POST" action="{{ route('admin.users.update', $user) }}">
@@ -75,9 +82,13 @@
                             </div>
                         </div>
 
-                        <div class="d-flex justify-content-between">
-                            <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">Cancel</a>
-                            <button type="submit" class="btn btn-primary">Update User</button>
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to Users
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Update User
+                            </button>
                         </div>
                     </form>
                 </div>

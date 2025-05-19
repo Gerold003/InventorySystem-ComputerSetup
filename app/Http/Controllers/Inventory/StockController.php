@@ -6,16 +6,20 @@ namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
-use App\Models\Inventory;
 use App\Models\Alert;
 use App\Models\Supplier;
+use App\Models\Inventory;
+use App\Models\PurchaseOrder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class StockController extends Controller
 {
     public function index()
     {
-        $products = Product::with('inventory')->paginate(10);
+        $products = Product::with(['inventory', 'department'])
+            ->withSum('stockMovements', 'quantity')
+            ->paginate(10);
         return view('inventory.stock.index', compact('products'));
     }
     
@@ -31,31 +35,48 @@ class StockController extends Controller
         return back()->with('success', 'Alert marked as read');
     }
     
-    public function reorder(Product $product)
+    public function lowStock()
     {
-        $suppliers = Supplier::all();
-        return view('inventory.stock.reorder', compact('product', 'suppliers'));
+        $products = Product::whereHas('inventory', function($query) {
+            $query->whereRaw('quantity <= low_stock_threshold');
+        })->with(['inventory', 'department'])->paginate(10);
+            
+        return view('inventory.stock.low', compact('products'));
     }
     
-    public function processReorder(Request $request, Product $product)
+    public function reorder(Product $product)
     {
-        $request->validate([
-            'supplier_id' => ['required', 'exists:suppliers,id'],
-            'quantity' => ['required', 'integer', 'min:1'],
-            'unit_price' => ['required', 'numeric', 'min:0']
+        // Create a new purchase order for the product
+        $purchaseOrder = PurchaseOrder::create([
+            'supplier_id' => $product->supplier_id,
+            'user_id' => auth()->id(),
+            'status' => 'pending',
+            'total_amount' => $product->cost_price * $product->reorder_quantity
         ]);
         
-        // In a real application, you would create a purchase order here
-        // For simplicity, we'll just update the inventory directly
+        // Add the product to the purchase order
+        $purchaseOrder->items()->create([
+            'product_id' => $product->id,
+            'quantity' => $product->reorder_quantity,
+            'unit_price' => $product->cost_price,
+            'total_price' => $product->cost_price * $product->reorder_quantity
+        ]);
+        
+        return redirect()->route('inventory.purchase-orders.show', $purchaseOrder)
+            ->with('success', 'Purchase order created for low stock item');
+    }
+    
+    public function adjust(Request $request, Product $product)
+    {
+        $request->validate([
+            'quantity' => 'required|integer',
+            'reason' => 'required|string'
+        ]);
         
         $inventory = $product->inventory;
-        $inventory->increment('quantity', $request->quantity);
-        
-        // Mark any low stock alerts as read
-        Alert::where('product_id', $product->id)
-            ->where('type', 'low_stock')
-            ->update(['is_read' => true]);
+        $inventory->quantity = $request->quantity;
+        $inventory->save();
             
-        return redirect()->route('inventory.stock.index')->with('success', 'Inventory updated successfully');
+        return back()->with('success', 'Stock adjusted successfully');
     }
 }

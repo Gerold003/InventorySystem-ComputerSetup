@@ -25,12 +25,21 @@ class OrderController extends Controller
     
     public function edit(Order $order)
     {
-        if ($order->sale && $order->sale->fulfillment_status == 'delivered') {
+        $order->load(['user', 'sale', 'items.product']);
+        
+        if (!$order->sale) {
+            // Create a pending sale record if none exists
+            $order->sale()->create([
+                'user_id' => auth()->id(),
+                'total_amount' => $order->total,
+                'payment_status' => 'pending',
+                'fulfillment_status' => 'pending'
+            ]);
+        } elseif ($order->sale->fulfillment_status == 'delivered') {
             return redirect()->route('sales.orders.show', $order)
                 ->with('error', 'Delivered orders cannot be edited');
         }
         
-        $order->load(['user', 'sale', 'items.product']);
         return view('sales.orders.edit', compact('order'));
     }
     
@@ -57,9 +66,9 @@ class OrderController extends Controller
         // Restore inventory if order is cancelled
         if ($order->sale) {
             foreach ($order->items as $item) {
-                $inventory = $item->product->inventory;
-                if ($inventory) {
-                    $inventory->increment('quantity', $item->quantity);
+                $currentStock = $item->product->current_stock;
+                if ($currentStock) {
+                    $item->product->increment('quantity', $item->quantity);
                 }
             }
             

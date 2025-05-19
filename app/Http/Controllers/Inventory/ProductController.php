@@ -25,7 +25,6 @@ class ProductController extends Controller
         $categories = Category::all();
         return view('inventory.products.create', compact('categories'));
     }
-    
     public function store(Request $request)
     {
         $request->validate([
@@ -39,26 +38,50 @@ class ProductController extends Controller
             'initial_quantity' => ['required', 'integer', 'min:0'],
             'low_stock_threshold' => ['required', 'integer', 'min:0']
         ]);
-        
-        $product = new Product($request->except(['image', 'initial_quantity', 'low_stock_threshold']));
-        $product->is_featured = $request->has('is_featured');
-        
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('products', 'public');
-            $product->image = $path;
+
+        try {
+            // Create the product first
+            $product = new Product();
+            $product->name = $request->name;
+            $product->description = $request->description;
+            $product->price = $request->price;
+            $product->category_id = $request->category_id;
+            $product->sku = $request->sku;
+            $product->is_featured = $request->has('is_featured');
+            $product->reorder_point = $request->low_stock_threshold;
+            $product->reorder_quantity = $request->initial_quantity;
+
+            // Handle image upload if present
+            if ($request->hasFile('image')) {
+                $image = $request->file('image');
+                $filename = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+                $path = $image->storeAs('products', $filename, 'public');
+                $product->image = $path;
+            }
+
+            // Save the product
+            $product->save();
+
+            // Create inventory record
+            Inventory::create([
+                'product_id' => $product->id,
+                'quantity' => $request->initial_quantity,
+                'low_stock_threshold' => $request->low_stock_threshold
+            ]);
+
+            return redirect()->route('inventory.products.index')
+                ->with('success', "Product '{$product->name}' has been created successfully.");
+        } catch (\Exception $e) {
+            \Log::error('Product creation error: ' . $e->getMessage());
+            if ($request->hasFile('image') && isset($path)) {
+                Storage::disk('public')->delete($path);
+            }
+            return redirect()->back()
+                ->with('error', 'Failed to create product. Please try again.')
+                ->withInput();
         }
-        
-        $product->save();
-        
-        // Create inventory record
-        Inventory::create([
-            'product_id' => $product->id,
-            'quantity' => $request->initial_quantity,
-            'low_stock_threshold' => $request->low_stock_threshold
-        ]);
-        
-        return redirect()->route('inventory.products.index')->with('success', 'Product created successfully');
     }
+
     
     public function show(Product $product)
     {
@@ -84,44 +107,85 @@ class ProductController extends Controller
             'low_stock_threshold' => ['required', 'integer', 'min:0']
         ]);
 
-        $product->fill($request->except(['image', 'low_stock_threshold']));
-        $product->is_featured = $request->has('is_featured');
+        try {
+            // Update basic product information
+            $product->name = $request->name;
+            $product->description = $request->description;
+            $product->price = $request->price;
+            $product->category_id = $request->category_id;
+            $product->sku = $request->sku;
+            $product->is_featured = $request->has('is_featured');
 
-        if ($request->hasFile('image')) {
-            // Delete old image if exists
-            if ($product->image) {
-                Storage::disk('public')->delete($product->image);
+            // Handle image upload if present
+            if ($request->hasFile('image')) {
+                // Delete old image if exists
+                if ($product->image) {
+                    Storage::disk('public')->delete($product->image);
+                }
+                
+                $image = $request->file('image');
+                $filename = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+                $path = $image->storeAs('products', $filename, 'public');
+                $product->image = $path;
             }
 
-            $path = $request->file('image')->store('products', 'public');
-            $product->image = $path;
-        }
-
-        $product->save();
-
-        // Ensure inventory record exists
-        if (!$product->inventory) {
-            $product->inventory()->create([
-                'quantity' => 0, // Default quantity if not provided
+            // Save the product
+            $product->save();
+            
+            // Update inventory
+            $product->ensureInventoryExists([
                 'low_stock_threshold' => $request->low_stock_threshold
             ]);
-        } else {
-            // Update inventory threshold
-            $product->inventory->update([
-                'low_stock_threshold' => $request->low_stock_threshold
-            ]);
-        }
 
-        return redirect()->route('inventory.products.index')->with('success', 'Product updated successfully');
+            return redirect()->route('inventory.products.index')
+                ->with('success', "Product '{$product->name}' has been updated successfully!");
+        } catch (\Exception $e) {
+            \Log::error('Product update error: ' . $e->getMessage());
+            if ($request->hasFile('image') && isset($path)) {
+                Storage::disk('public')->delete($path);
+            }
+            return redirect()->back()
+                ->with('error', 'Failed to update product. Please try again.')
+                ->withInput();
+        }
     }
-    
     public function destroy(Product $product)
-    {
+{
+    try {
+        $productName = $product->name;
+        
+        // Delete product image if it exists
         if ($product->image) {
             Storage::disk('public')->delete($product->image);
         }
-        
+
+        // Delete the product
         $product->delete();
-        return redirect()->route('inventory.products.index')->with('success', 'Product deleted successfully');
+
+        // Redirect with success message
+        return redirect()->route('inventory.products.index')
+            ->with('success', "Product '{$productName}' has been deleted successfully.");
+    } catch (\Exception $e) {
+        // Log the error if needed: Log::error($e);
+        return redirect()->back()
+            ->with('error', 'Failed to delete product. Please try again.');
     }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
 }

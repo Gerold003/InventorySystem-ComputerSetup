@@ -110,7 +110,12 @@
         <div class="logo-container">
             <img src="/images/logo.png" alt="Logo">
         </div>
-        <h4 class="mb-3 text-center" style="color: white; font-weight: bold;">Create New User</h4>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="mb-0" style="color: white; font-weight: bold;">Create New User</h4>
+            <a href="{{ route('admin.dashboard') }}" class="btn btn-sm btn-light">
+                <i class="fas fa-times"></i> Close
+            </a>
+        </div>
         <form method="POST" action="{{ route('admin.users.store') }}">
             @csrf
             <div class="row g-4">
@@ -208,10 +213,10 @@
 
             <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mt-4">
                 <a href="{{ route('admin.users.index') }}" class="btn btn-secondary w-100">
-                   Cancel
+                    <i class="fas fa-arrow-left"></i> Back to Users
                 </a>
                 <button type="submit" class="btn btn-custom w-100">
-                    Create User
+                    <i class="fas fa-save"></i> Create User
                 </button>
             </div>
         </form>

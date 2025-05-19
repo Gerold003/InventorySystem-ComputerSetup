@@ -13,13 +13,13 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::query()->with(['category', 'inventory']);
+        $query = Product::query()->with(['category', 'stockMovements']);
         
         // Filter by category if category ID is provided
         if ($request->has('category_id')) {
             $query->where('category_id', $request->category_id);
         }
-        
+         
         // Filter by price range
         if ($request->has('price_min')) {
             $query->where('price', '>=', $request->price_min);
@@ -28,6 +28,10 @@ class ProductController extends Controller
         if ($request->has('price_max')) {
             $query->where('price', '<=', $request->price_max);
         }
+        if ($request->has('featured') && $request->featured) {
+            $query->where('is_featured', true);
+        }
+        
         
         // Sorting
         if ($request->has('sort')) {
@@ -71,7 +75,7 @@ class ProductController extends Controller
     public function category(Category $category)
     {
         $products = $category->products()
-            ->with('inventory')
+            ->with('stockMovements')
             ->paginate(12);
         $categories = Category::all();
         

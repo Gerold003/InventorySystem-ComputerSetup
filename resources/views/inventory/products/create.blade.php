@@ -103,7 +103,7 @@
                         </div>
 
                         <div class="form-check mb-4">
-                            <input class="form-check-input" type="checkbox" name="is_featured" id="is_featured"
+                            <input class="form-check-input" type="checkbox" name="is_featured" id="is_featured" value="1"
                                 {{ old('is_featured') ? 'checked' : '' }}>
                             <label class="form-check-label" for="is_featured">
                                 Mark as Featured Product

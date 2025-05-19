@@ -10,28 +10,61 @@ class PurchaseOrder extends Model
     use HasFactory;
 
     protected $fillable = [
-        'po_number',
+        'user_id',
         'supplier_id',
+        'product_id',
+        'po_number',
         'order_date',
         'expected_delivery_date',
-        'notes',
         'status',
-        'user_id',
+        'notes',
+        'quantity',
+        'total_amount',
+        'approved_by',
+        'approved_at'
+    ];
+
+    protected $attributes = [
+        'status' => 'pending'
     ];
 
     // Add this date casting
     protected $casts = [
-        'order_date' => 'datetime',
-        'expected_delivery_date' => 'datetime',
+        'order_date' => 'date',
+        'expected_delivery_date' => 'date',
+        'approved_at' => 'datetime',
+        'total_amount' => 'decimal:2'
     ];
+
+    protected $with = ['items']; // Always load items relationship
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
     public function supplier()
     {
         return $this->belongsTo(Supplier::class);
     }
 
-    public function user()
+    public function product()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Product::class);
+    }
+
+    public function items()
+    {
+        return $this->hasMany(PurchaseOrderItem::class);
+    }
+
+    public function approver()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function getTotalAmountAttribute()
+    {
+        return $this->quantity * ($this->product->cost_price ?? 0);
     }
 }

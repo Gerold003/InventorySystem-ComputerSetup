@@ -11,6 +11,7 @@ use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Inventory;
 use App\Models\Sale;
+use App\Models\Alert;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -25,11 +26,11 @@ class CheckoutController extends Controller
             return redirect()->route('cart.index')->with('error', 'Your cart is empty');
         }
         
-        $cartItems = $cart->items()->with('product.inventory')->get();
+        $cartItems = $cart->items()->with('product')->get();
         
         // Verify all items are in stock
         foreach ($cartItems as $item) {
-            if ($item->product->stock < $item->quantity) {
+            if ($item->product->current_stock < $item->quantity) {
                 return redirect()->route('cart.index')->with('error', "{$item->product->name} doesn't have enough stock");
             }
         }
@@ -65,11 +66,11 @@ class CheckoutController extends Controller
             return redirect()->route('cart.index')->with('error', 'Your cart is empty');
         }
         
-        $cartItems = $cart->items()->with('product.inventory')->get();
+        $cartItems = $cart->items()->with('product')->get();
         
         // Verify all items are in stock
         foreach ($cartItems as $item) {
-            if ($item->product->stock < $item->quantity) {
+            if ($item->product->current_stock < $item->quantity) {
                 return redirect()->route('cart.index')->with('error', "{$item->product->name} doesn't have enough stock");
             }
         }
@@ -98,7 +99,7 @@ class CheckoutController extends Controller
             'notes' => $request->notes
         ]);
         
-        // Add order items
+        // Add order items and update stock
         foreach ($cartItems as $cartItem) {
             OrderItem::create([
                 'order_id' => $order->id,
@@ -108,27 +109,29 @@ class CheckoutController extends Controller
                 'total_price' => $cartItem->product->price * $cartItem->quantity
             ]);
             
-            // Update inventory
-            $inventory = Inventory::where('product_id', $cartItem->product_id)->first();
-            if ($inventory) {
-                $inventory->decrement('quantity', $cartItem->quantity);
+            // Record stock movement
+            $cartItem->product->recordStockMovement(
+                -$cartItem->quantity,
+                'out',
+                'Order placed',
+                $order
+            );
                 
                 // Check for low stock
-                if ($inventory->quantity <= $inventory->low_stock_threshold) {
+            if ($cartItem->product->isLowStock()) {
                     // Create alert (you can also implement notification system)
                     Alert::create([
                         'product_id' => $cartItem->product_id,
                         'type' => 'low_stock',
-                        'message' => "Product {$cartItem->product->name} is low on stock ({$inventory->quantity} remaining)"
+                    'message' => "Product {$cartItem->product->name} is low on stock ({$cartItem->product->current_stock} remaining)"
                     ]);
-                }
             }
         }
         
         // Clear the cart
         $cart->items()->delete();
         
-        // Create sale record (to be processed by sales department)
+        // Create sale record
         Sale::create([
             'user_id' => $user->id,
             'order_id' => $order->id,

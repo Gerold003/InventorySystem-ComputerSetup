@@ -20,12 +20,19 @@ return new class extends Migration
             $table->string('sku');
             $table->string('image')->nullable();
             $table->boolean('is_featured')->default(false);
+            $table->integer('reorder_point')->default(0);     
+            $table->integer('reorder_quantity')->default(0); 
             $table->timestamps();
 
             $table->foreign('category_id')
                   ->references('id')
                   ->on('categories')
                   ->onDelete('cascade');
+        });
+        
+        Schema::table('products', function (Blueprint $table) {
+            $table->index('category_id');
+            $table->index('sku');
         });
     }
 

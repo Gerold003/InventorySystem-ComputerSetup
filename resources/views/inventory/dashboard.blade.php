@@ -173,11 +173,11 @@
                                         @forelse($recentPurchaseOrders as $po)
                                         <tr>
                                             <td><a href="{{ route('inventory.purchase-orders.show', $po) }}">{{ $po->po_number }}</a></td>
-                                            <td>{{ $po->supplier->name }}</td>
+                                            <td>{{ $po->supplier ? $po->supplier->name : 'N/A' }}</td>
                                             <td>
                                                 <span class="badge badge-{{ 
-                                                    $po->status === 'pending' ? 'warning' : 
-                                                    ($po->status === 'approved' ? 'info' : 
+                                                    $po->status === 'pending' ? 'warning text-dark' :  
+                                                    ($po->status === 'approved' ? 'info text-dark' : 
                                                     ($po->status === 'delivered' ? 'success' : 'secondary')) 
                                                 }}">
                                                     {{ ucfirst($po->status) }}

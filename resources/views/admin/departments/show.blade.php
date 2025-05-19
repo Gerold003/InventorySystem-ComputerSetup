@@ -1,58 +1,90 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
+<div class="container-fluid">
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>Department Details: {{ $department->name }}</span>
-                    <div>
-                        <a href="{{ route('admin.departments.edit', $department) }}" class="btn btn-sm btn-primary">
-                            <i class="fas fa-edit"></i> Edit
-                        </a>
-                    </div>
+        <div class="col-12 col-lg-11 col-xl-10">
+            <div class="card border-primary shadow-lg">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
+                    <h4 class="mb-0">
+                        <i class="fas fa-file-invoice me-2"></i>Purchase Order Details
+                    </h4>
+                    <button type="button" 
+                            class="btn-close btn-close-white p-2" 
+                            aria-label="Close"
+                            onclick="window.history.back()"></button>
                 </div>
+                
+                <div class="card-body p-4">
+                    <dl class="row mb-0">
+                        <!-- Left Column -->
+                        <div class="col-md-6">
+                            <div class="mb-4">
+                                <dt class="h6 text-muted mb-2">Supplier</dt>
+                                <dd class="fs-5">{{ $purchaseOrder->supplier->name }}</dd>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <dt class="h6 text-muted mb-2">Order Date</dt>
+                                <dd class="fs-5">
+                                    <i class="fas fa-calendar-day text-primary me-2"></i>
+                                    {{ $purchaseOrder->order_date->format('M d, Y') }}
+                                </dd>
+                            </div>
+                        </div>
+                        
+                        <!-- Right Column -->
+                        <div class="col-md-6">
+                            <div class="mb-4">
+                                <dt class="h6 text-muted mb-2">Status</dt>
+                                <dd class="fs-5">
+                                    <span class="badge status-{{ $purchaseOrder->status }}">
+                                        {{ ucfirst($purchaseOrder->status) }}
+                                    </span>
+                                </dd>
+                            </div>
+                            <div class="mb-4">
+                                <dt class="h6 text-muted mb-2">Expected Delivery</dt>
+                                <dd class="fs-5">
+                                    <i class="fas fa-truck text-primary me-2"></i>
+                                    {{ $purchaseOrder->expected_delivery_date->format('M d, Y') }}
+                                </dd>
+                            </div>
+                        </div>
+                    </dl>
 
-                <div class="card-body">
-                    <div class="mb-4">
-                        <h5>Description</h5>
-                        <p>{{ $department->description ?? 'No description available' }}</p>
+                    <!-- Approval Section -->
+                    @if($purchaseOrder->status === 'pending' && auth()->user()->role === 'admin')
+                    <div class="mt-4 border-top pt-4">
+                        <h5 class="mb-3 text-primary">Approval Actions</h5>
+                        <div class="d-flex gap-2">
+                            <form action="{{ route('admin.purchase-orders.approve', $purchaseOrder) }}" method="POST">
+                                @csrf
+                                @method('PUT')
+                                <button type="submit" 
+                                        class="btn btn-success btn-icon-split shadow-sm"
+                                        onclick="return confirm('Are you sure you want to approve this purchase order?')">
+                                    <span class="icon text-white bg-gradient-success">
+                                        <i class="fas fa-check"></i>
+                                    </span>
+                                    <span class="d-none d-md-inline-block font-weight-medium">
+                                        Approve Purchase Order
+                                    </span>
+                                </button>
+                            </form>
+                            
+                            <a href="{{ route('inventory.purchase-orders.edit', $purchaseOrder) }}" 
+                               class="btn btn-warning btn-icon-split shadow-sm"
+                               title="Modify Purchase Order">
+                                <span class="icon text-white bg-gradient-warning">
+                                    <i class="fas fa-edit"></i>
+                                </span>
+                                <span class="d-none d-md-inline-block font-weight-medium">
+                                    Modify PO
+                                </span>
+                            </a>
+                        </div>
                     </div>
-
-                    <hr>
-
-                    <h5 class="mb-3">Department Members ({{ $users->total() }})</h5>
-
-                    @if($users->isEmpty())
-                        <div class="alert alert-info">No users in this department</div>
-                    @else
-                        <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Email</th>
-                                        <th>Role</th>
-                                        <th>Joined</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($users as $user)
-                                    <tr>
-                                        <td>{{ $user->name }}</td>
-                                        <td>{{ $user->email }}</td>
-                                        <td>{{ ucfirst($user->role) }}</td>
-                                        <td>{{ $user->created_at->format('m/d/Y') }}</td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <div class="d-flex justify-content-center mt-4">
-                            {{ $users->links() }}
-                        </div>
                     @endif
                 </div>
             </div>
